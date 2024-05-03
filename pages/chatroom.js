@@ -4,7 +4,7 @@ import { getFirestore, doc, onSnapshot, collection, addDoc, query, orderBy } fro
 import 'bulma/css/bulma.css';
 import Link from 'next/link';
 import { signOut } from 'firebase/auth';
-import { auth } from './firebase/config';
+import { auth } from '../firebase/config';
 import { FaUser } from "react-icons/fa";
 
 export default function ChatroomPage() {

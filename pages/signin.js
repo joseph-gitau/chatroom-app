@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { getAuth, signInWithCustomToken } from 'firebase/auth';
 import 'bulma/css/bulma.css';
-import { auth } from './firebase/config';
+import { auth } from '../firebase/config';
 
 export default function SignIn() {
     const router = useRouter();

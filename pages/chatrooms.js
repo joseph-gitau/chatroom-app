@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { auth } from './firebase/config'; // Import the auth instance
+import { auth } from '../firebase/config'; // Import the auth instance
 import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, addDoc } from 'firebase/firestore'; // Import Firestore functions
 import 'bulma/css/bulma.css';
 import { useRouter } from 'next/router';
