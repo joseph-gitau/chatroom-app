@@ -28,7 +28,7 @@ export default function SignIn() {
                 // Signed in
                 const user = userCredential.user;
                 console.log(user);
-                router.push('/');
+                router.push('/chatrooms');
             })
             .catch((error) => {
                 const errorCode = error.code;
