@@ -5,6 +5,7 @@ import 'bulma/css/bulma.css';
 import Link from 'next/link';
 import { signOut } from 'firebase/auth';
 import { auth } from './firebase/config';
+import { FaUser } from "react-icons/fa";
 
 export default function ChatroomPage() {
     const router = useRouter();
@@ -24,21 +25,22 @@ export default function ChatroomPage() {
 
         if (!user) {
             router.push('/signin');
-            return;
+            // return;
+        } else {
+            const db = getFirestore();
+            const messagesRef = collection(db, 'chatrooms', id, 'messages');
+            const messagesQuery = query(messagesRef, orderBy('createdAt'));
+
+            const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+                const loadedMessages = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                setMessages(loadedMessages);
+            });
+
+            return () => unsubscribe();
         }
-        const db = getFirestore();
-        const messagesRef = collection(db, 'chatrooms', id, 'messages');
-        const messagesQuery = query(messagesRef, orderBy('createdAt'));
-
-        const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-            const loadedMessages = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()   
-            }));
-            setMessages(loadedMessages);
-        });
-
-        return () => unsubscribe();
     }, [id]);
 
     const sendMessage = async () => {
@@ -70,14 +72,10 @@ export default function ChatroomPage() {
                 <div className="navbar-menu">
                     <div className="navbar-start">
                         <Link href="/chatrooms">
-                            <span className={`navbar-item ${router.pathname === '/chatrooms' ? 'is-active' : ''}`}>
-                                Chatrooms
-                            </span>
+                            <span className={`navbar-item ${router.pathname === '/chatrooms' ? 'is-active' : ''}`}>Chatrooms</span>
                         </Link>
                         <Link href="/about">
-                            <span className={`navbar-item ${router.pathname === '/about' ? 'is-active' : ''}`}>
-                                About
-                            </span>
+                            <span className={`navbar-item ${router.pathname === '/about' ? 'is-active' : ''}`}>About</span>
                         </Link>
                     </div>
 
@@ -89,19 +87,35 @@ export default function ChatroomPage() {
                 </div>
             </nav>
             <h1 className="title">Chat Room: {id}</h1>
-            <div className="box">
+            <div className="box content">
                 {messages.map(msg => (
-                    <div key={msg.id} className="message">
-                        <p><strong>{msg.user}:</strong> {msg.text}</p>
-                    </div>
+                    <article key={msg.id} className="media">
+                        <figure className="media-left">
+                            <p className="image is-64x64">
+                                <span className="icon has-text-info">
+                                    <FaUser size="3x" position="center" />
+                                </span>
+                            </p>
+                        </figure>
+                        <div className="media-content">
+                            <div className="content">
+                                <p>
+                                    <strong>{msg.user}</strong>
+                                    <br />
+                                    {msg.text}
+                                </p>
+                            </div>
+                        </div>
+                    </article>
                 ))}
             </div>
             <div className="field has-addons">
                 <div className="control is-expanded">
-                    <input className="input" type="text" placeholder="Type your message..." value={newMessage} onChange={e => setNewMessage(e.target.value)} />
+                    <input className="input is-info" type="text" placeholder="Type your message..." value={newMessage} onChange={e => setNewMessage(e.target.value)} />
                 </div>
                 <div className="control">
                     <button className="button is-link" onClick={sendMessage}>Send</button>
+                    <button className="button is-warning" onClick={() => setNewMessage('')}>Cancel</button>
                 </div>
             </div>
         </div>

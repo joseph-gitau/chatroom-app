@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { getAuth, signInWithCustomToken } from 'firebase/auth';
 import 'bulma/css/bulma.css';
@@ -6,6 +6,7 @@ import { auth } from './firebase/config';
 
 export default function SignIn() {
     const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         // Check if user is already signed in
@@ -18,6 +19,7 @@ export default function SignIn() {
 
     const handleSignIn = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
         const username = e.target.username.value;
 
         // Fetch the custom token from API
@@ -32,6 +34,7 @@ export default function SignIn() {
         if (!response.ok) {
             // Handle unsuccessful response
             console.error('Failed to fetch custom token');
+            setIsLoading(false);
             return;
         }
 
@@ -71,14 +74,16 @@ export default function SignIn() {
                                             placeholder="Enter your username"
                                             className="input"
                                             required
+                                            disabled={isLoading} // Disable input when loading
                                         />
                                     </div>
                                 </div>
                                 <div className="field">
                                     <div className="control">
-                                        <button type="submit" className="button is-primary">
-                                            Sign In
+                                        <button type="submit" className="button is-primary" disabled={isLoading}>
+                                            {isLoading ? 'Signing In...' : 'Sign In'}
                                         </button>
+                                        {isLoading && <div className="button is-loading is-primary" />} {/* Loading spinner */}
                                     </div>
                                 </div>
                             </form>
