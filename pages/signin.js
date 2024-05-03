@@ -3,10 +3,19 @@ import { useRouter } from 'next/router';
 import { getAuth, signInWithCustomToken } from 'firebase/auth';
 import 'bulma/css/bulma.css';
 import { auth } from './firebase/config';
-import { Router } from 'next/router';
 
 export default function SignIn() {
     const router = useRouter();
+
+    useEffect(() => {
+        // Check if user is already signed in
+        const user = getAuth().currentUser;
+        if (user) {
+            // Redirect if user is already signed in
+            router.push('/chatrooms');
+        }
+    }, []);
+
     const handleSignIn = async (e) => {
         e.preventDefault();
         const username = e.target.username.value;
@@ -20,21 +29,27 @@ export default function SignIn() {
             body: JSON.stringify({ username }),
         });
 
-        const { token } = await response.json();
+        if (!response.ok) {
+            // Handle unsuccessful response
+            console.error('Failed to fetch custom token');
+            return;
+        }
 
-        // Sign in with the custom token
-        signInWithCustomToken(auth, token)
-            .then((userCredential) => {
-                // Signed in
-                const user = userCredential.user;
-                console.log(user);
-                router.push('/chatrooms');
-            })
-            .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                console.error(errorCode, errorMessage);
-            });
+        try {
+            const { token } = await response.json();
+
+            // Sign in with the custom token
+            signInWithCustomToken(auth, token)
+                .then(() => {
+                    // Redirect to chatrooms page after successful sign-in
+                    router.push('/chatrooms');
+                })
+                .catch((error) => {
+                    console.error('Failed to sign in:', error);
+                });
+        } catch (error) {
+            console.error('Error parsing response:', error);
+        }
     };
 
     return (

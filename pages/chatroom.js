@@ -4,16 +4,28 @@ import { getFirestore, doc, onSnapshot, collection, addDoc, query, orderBy } fro
 import 'bulma/css/bulma.css';
 import Link from 'next/link';
 import { signOut } from 'firebase/auth';
+import { auth } from './firebase/config';
 
 export default function ChatroomPage() {
     const router = useRouter();
     const { id } = router.query; // Get the chatroom ID from the URL
+    // console.log(id);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
+    console.log(useState)
+
+    const user = auth.currentUser;
+    console.log(user);
+
+    const user_name = user.uid;
 
     useEffect(() => {
         if (!id) return; // Prevents running on initial render when id is undefined
 
+        if (!user) {
+            router.push('/signin');
+            return;
+        }
         const db = getFirestore();
         const messagesRef = collection(db, 'chatrooms', id, 'messages');
         const messagesQuery = query(messagesRef, orderBy('createdAt'));
@@ -36,19 +48,19 @@ export default function ChatroomPage() {
         await addDoc(messagesRef, {
             text: newMessage,
             createdAt: new Date(),
-            user: 'username' // This should be dynamic based on the logged-in user
+            user: user_name
         });
         setNewMessage('');
     };
 
     const handleLogout = async () => {
         await signOut(auth);
-        router.push('/login');
+        router.push('/signin');
     }
 
     return (
         <div className="container">
-            <nav className="navbar is-light" role="navigation" aria-label="main navigation">
+            <nav className="navbar is-dark" role="navigation" aria-label="main navigation">
                 <div className="navbar-brand">
                     <Link href="/">
                         <span className="navbar-item" href="/">ChatApp</span>

@@ -13,19 +13,24 @@ if (!admin.apps.length) {
     });
 }
 
+// eslint-disable-next-line import/no-anonymous-default-export
 export default async (req, res) => {
     const { username } = req.body;
-    // Implement logic to create or retrieve user and generate custom token
+
+    // Generate a unique ID for the user
     const userRef = admin.firestore().collection('users').doc(username);
-    const userDoc = await userRef.get();
 
-    if (!userDoc.exists) {
-        // Create new user if not exists
-        await userRef.set({ username });
-    }
+    // Include the username and timestamp in the user document
+    const timestamp = admin.firestore.FieldValue.serverTimestamp();
+    await userRef.set({
+        username,
+        displayName: username,
+        createdAt: timestamp
+    });
 
-    const uid = username; // Unique identifier for the user
+    const uid = userRef.id; // Unique identifier for the user
     const customToken = await admin.auth().createCustomToken(uid);
 
     res.status(200).json({ token: customToken });
 };
+
