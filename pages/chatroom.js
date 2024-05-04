@@ -17,8 +17,11 @@ export default function ChatroomPage() {
 
     const user = auth.currentUser;
     console.log(user);
-
-    const user_name = user.uid;
+    if (!user) {
+        router.push('/signin');
+    } else {
+        const user_name = user;
+    }
 
     useEffect(() => {
         if (!id) return; // Prevents running on initial render when id is undefined
