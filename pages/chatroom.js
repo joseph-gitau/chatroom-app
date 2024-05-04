@@ -9,26 +9,17 @@ import { FaUser } from "react-icons/fa";
 
 export default function ChatroomPage() {
     const router = useRouter();
-    const { id } = router.query; // Get the chatroom ID from the URL
-    // console.log(id);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
-    console.log(useState)
 
     const user = auth.currentUser;
-    console.log(user);
-    if (!user) {
-        router.push('/signin');
-    } else {
-        const user_name = user;
-    }
-
     useEffect(() => {
+        if (!router.isReady) return; // Ensures router is ready
+        const { id } = router.query; // Get the chatroom ID from the URL
         if (!id) return; // Prevents running on initial render when id is undefined
 
         if (!user) {
             router.push('/signin');
-            // return;
         } else {
             const db = getFirestore();
             const messagesRef = collection(db, 'chatrooms', id, 'messages');
@@ -44,16 +35,17 @@ export default function ChatroomPage() {
 
             return () => unsubscribe();
         }
-    }, [id]);
+    }, [router.isReady, router.query]);
 
     const sendMessage = async () => {
         if (!newMessage.trim()) return;
+        const { id } = router.query;
         const db = getFirestore();
         const messagesRef = collection(db, 'chatrooms', id, 'messages');
         await addDoc(messagesRef, {
             text: newMessage,
             createdAt: new Date(),
-            user: user_name
+            user: user.displayName || user.email
         });
         setNewMessage('');
     };
@@ -89,7 +81,7 @@ export default function ChatroomPage() {
                     </div>
                 </div>
             </nav>
-            <h1 className="title">Chat Room: {id}</h1>
+            <h1 className="title">Chat Room: {router.query.id}</h1>
             <div className="box content">
                 {messages.map(msg => (
                     <article key={msg.id} className="media">

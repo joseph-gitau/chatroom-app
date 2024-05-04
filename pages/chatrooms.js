@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { auth } from '../firebase/config'; // Import the auth instance
-import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, addDoc } from 'firebase/firestore'; // Import Firestore functions
+import { auth } from '../firebase/config';
+import { getFirestore, collection, query, onSnapshot, addDoc } from 'firebase/firestore';
 import 'bulma/css/bulma.css';
 import { useRouter } from 'next/router';
 import { signOut } from 'firebase/auth';
@@ -10,26 +10,19 @@ export default function ChatroomsPage() {
     const router = useRouter();
     const [chatrooms, setChatrooms] = useState([]);
     const [input, setInput] = useState('');
-    const [username, setUsername] = useState('');
-    // get current user from auth
-    const user = auth.currentUser;
-    if (!user) {
-        router.push('/signin');
-    } else {
-        const user_name = user;
-    }
-    // console.log(user_name)
-    useEffect(() => {
-        // Check if the user is authenticated
-        const unsubscribe = auth.onAuthStateChanged((user) => {
-            if (user) {
-                // User is signed in, set the username
-                setUsername(user.displayName);
 
-                // Load chatrooms from Firestore
-                const db = getFirestore(); // Get Firestore instance
+    useEffect(() => {
+        // Ensure the router is ready before accessing query parameters or pushing paths
+        if (!router.isReady) return;
+
+        const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+            if (!user) {
+                // User is not signed in, redirect to sign-in page
+                router.push('/signin');
+            } else {
+                // User is signed in, proceed to fetch chatrooms
+                const db = getFirestore();
                 const chatroomsRef = collection(db, 'chatrooms');
-                // const chatroomsQuery = query(chatroomsRef, where('user', '==', user_name));
                 const chatroomsQuery = query(chatroomsRef);
 
                 const unsubscribeChatrooms = onSnapshot(chatroomsQuery, (snapshot) => {
@@ -40,21 +33,15 @@ export default function ChatroomsPage() {
                     setChatrooms(rooms);
                 });
 
-                return () => {
-                    // Detach listeners on unmount
-                    unsubscribeChatrooms();
-                };
-            } else {
-                // User is not signed in, redirect to sign-in page
-                router.push('/signin');
+                return () => unsubscribeChatrooms();
             }
         });
 
         return () => {
-            // Detach auth state change listener on unmount
-            unsubscribe();
+            // Clean up both listeners when the component unmounts
+            unsubscribeAuth();
         };
-    }, [router]);
+    }, [router.isReady]);
 
     const handleInputChange = (event) => {
         setInput(event.target.value);
@@ -64,14 +51,11 @@ export default function ChatroomsPage() {
         if (input.length === 4 && !chatrooms.some(room => room.id === input)) {
             const db = getFirestore();
             const chatroomsCollection = collection(db, 'chatrooms');
-
-            // Add a new document to the "chatrooms" collection with an auto-generated ID
             await addDoc(chatroomsCollection, {
                 id: input,
                 createdAt: new Date(),
-                user: user_name
+                user: auth.currentUser.displayName || auth.currentUser.email
             });
-
             setInput('');
         }
     };
@@ -79,7 +63,7 @@ export default function ChatroomsPage() {
     const handleLogout = async () => {
         await signOut(auth);
         router.push('/signin');
-    }
+    };
 
     return (
         <div className="container">
