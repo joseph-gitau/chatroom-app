@@ -22,7 +22,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-const perf = getPerformance(app);
-const analytics = getAnalytics(app);
+let perf;
+let analytics;
+if (typeof window !== 'undefined') {
+    const { getAnalytics } = require("firebase/analytics");
+    const { getPerformance } = require("firebase/performance");
 
-export { auth };
+    perf = getPerformance(app);
+    analytics = getAnalytics(app);
+}
+
+export { auth, perf, analytics };
