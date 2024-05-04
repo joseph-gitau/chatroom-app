@@ -13,7 +13,11 @@ export default function ChatroomsPage() {
     const [username, setUsername] = useState('');
     // get current user from auth
     const user = auth.currentUser;
-    const user_name = user.uid;
+    if (!user) {
+        router.push('/signin');
+    } else {
+        const user_name = user;
+    }
     // console.log(user_name)
     useEffect(() => {
         // Check if the user is authenticated
